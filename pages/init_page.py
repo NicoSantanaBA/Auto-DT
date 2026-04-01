@@ -11,8 +11,6 @@ class InitPage(BasePage):
     INPUT_NOMBRE_EMP = (By.CSS_SELECTOR, "input[name*='dviEmpresaAFiscalizarNombre_Edit_dropdown$DD']")
     INPUT_RUT_EMP = (By.CSS_SELECTOR, "input[id*='dviEmpresaAFiscalizarRUT_Edit_dropdown_DD_I']")
     CONFIRM_BTN =(By.ID, "Logon_PopupActions_Menu_DXI0_T")
-    
-
 
     def seleccionar_empresa_por_rut(self, rut):
         self.wait_for_visible(self.TABLA)

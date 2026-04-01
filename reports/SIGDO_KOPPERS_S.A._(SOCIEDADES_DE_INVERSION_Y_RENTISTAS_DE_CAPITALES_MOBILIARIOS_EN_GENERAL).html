@@ -1,0 +1,192 @@
+
+    <html>
+    <head>
+        <style>
+            body {
+                font-family: 'Segoe UI', Arial;
+                background: #f5f7fa;
+                margin: 0;
+                padding: 20px;
+            }
+
+            .container {
+                max-width: 1200px;
+                margin: auto;
+            }
+
+            h1 {
+                margin-bottom: 5px;
+            }
+
+            .header {
+                background: white;
+                padding: 20px;
+                border-radius: 10px;
+                margin-bottom: 20px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            }
+
+            .summary {
+                display: flex;
+                gap: 20px;
+                margin-top: 10px;
+            }
+
+            .box {
+                padding: 10px 20px;
+                border-radius: 8px;
+                font-weight: bold;
+            }
+
+            .ok { background: #d4edda; color: #155724; }
+            .fail { background: #f8d7da; color: #721c24; }
+            .total { background: #e2e3e5; }
+
+            .card {
+                background: white;
+                margin-bottom: 20px;
+                border-radius: 10px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+                overflow: hidden;
+            }
+
+            .card-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 15px 20px;
+                border-bottom: 1px solid #eee;
+            }
+
+            .badge {
+                color: white;
+                padding: 5px 10px;
+                border-radius: 5px;
+                font-size: 12px;
+            }
+
+            .card-body {
+                padding: 20px;
+            }
+
+            .errores {
+                background: #fff3cd;
+                padding: 10px;
+                border-radius: 5px;
+            }
+
+            .screenshot {
+                margin-top: 15px;
+                max-width: 100%;
+                border-radius: 8px;
+                border: 1px solid #ddd;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="container">
+
+            <div class="header">
+                <h1>Informe de Auditoría</h1>
+                <p><b>Empresa:</b> SIGDO KOPPERS S.A. (SOCIEDADES DE INVERSION Y RENTISTAS DE CAPITALES MOBILIARIOS EN GENERAL)</p>
+                <p><b>RUT:</b> 99598300-1</p>
+                <p><b>Fecha:</b> 2026-04-01 16:31:44</p>
+
+                <div class="summary">
+                    <div class="box total">Total: 6</div>
+                    <div class="box ok">OK: 2</div>
+                    <div class="box fail">FAIL: 4</div>
+                </div>
+            </div>
+
+            
+        <div class="card">
+            <div class="card-header">
+                <h2>asistencia</h2>
+                <span class="badge" style="background:#dc3545">FAIL</span>
+            </div>
+
+            <div class="card-body">
+                <h4>Errores</h4>
+                <ul class="errores"><li>No cargó el reporte</li></ul>
+
+                <img src="../screenshots\SIGDO_KOPPERS_S.A._(SOCIEDADES_DE_INVERSION_Y_RENTISTAS_DE_CAPITALES_MOBILIARIOS_EN_GENERAL)\asistencia_20260401_162809.png" class="screenshot">
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2>jor_diaria</h2>
+                <span class="badge" style="background:#dc3545">FAIL</span>
+            </div>
+
+            <div class="card-body">
+                <h4>Errores</h4>
+                <ul class="errores"><li>No cargó el reporte</li></ul>
+
+                <img src="../screenshots\SIGDO_KOPPERS_S.A._(SOCIEDADES_DE_INVERSION_Y_RENTISTAS_DE_CAPITALES_MOBILIARIOS_EN_GENERAL)\jor_diaria_20260401_162855.png" class="screenshot">
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2>domingos</h2>
+                <span class="badge" style="background:#dc3545">FAIL</span>
+            </div>
+
+            <div class="card-body">
+                <h4>Errores</h4>
+                <ul class="errores"><li>No cargó el reporte</li></ul>
+
+                <img src="../screenshots\SIGDO_KOPPERS_S.A._(SOCIEDADES_DE_INVERSION_Y_RENTISTAS_DE_CAPITALES_MOBILIARIOS_EN_GENERAL)\domingos_20260401_162951.png" class="screenshot">
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2>modificaciones</h2>
+                <span class="badge" style="background:#dc3545">FAIL</span>
+            </div>
+
+            <div class="card-body">
+                <h4>Errores</h4>
+                <ul class="errores"><li>No cargó el reporte</li></ul>
+
+                <img src="../screenshots\SIGDO_KOPPERS_S.A._(SOCIEDADES_DE_INVERSION_Y_RENTISTAS_DE_CAPITALES_MOBILIARIOS_EN_GENERAL)\modificaciones_20260401_163051.png" class="screenshot">
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2>diario</h2>
+                <span class="badge" style="background:#28a745">OK</span>
+            </div>
+
+            <div class="card-body">
+                <h4>Errores</h4>
+                <ul class="errores"><li>Sin errores</li></ul>
+
+                <img src="../screenshots\SIGDO_KOPPERS_S.A._(SOCIEDADES_DE_INVERSION_Y_RENTISTAS_DE_CAPITALES_MOBILIARIOS_EN_GENERAL)\diario_20260401_163131.png" class="screenshot">
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2>incidentes</h2>
+                <span class="badge" style="background:#28a745">OK</span>
+            </div>
+
+            <div class="card-body">
+                <h4>Errores</h4>
+                <ul class="errores"><li>Sin errores</li></ul>
+
+                <img src="../screenshots\SIGDO_KOPPERS_S.A._(SOCIEDADES_DE_INVERSION_Y_RENTISTAS_DE_CAPITALES_MOBILIARIOS_EN_GENERAL)\incidentes_20260401_163140.png" class="screenshot">
+            </div>
+        </div>
+        
+
+        </div>
+    </body>
+    </html>
+    

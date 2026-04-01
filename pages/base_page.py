@@ -41,14 +41,13 @@ class BasePage:
             try:
                 elementos = driver.find_elements(By.CSS_SELECTOR, "table.dxlpLoadingPanel_XafTheme")
                 if not elementos:
-                    return True  # no hay loader, seguimos
+                    return True
                 return all(
                     "display: none" in (el.get_attribute("style") or "")
                     for el in elementos
                 )
             except StaleElementReferenceException:
-                return False  # relocaliza en el próximo poll
-        
+                return False
         WebDriverWait(self.driver, timeout).until(loader_oculto)
     
     def wait_for_file(self, download_path, timeout=60):

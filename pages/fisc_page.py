@@ -27,7 +27,6 @@ class FiscPage(BasePage):
     }
 
     REPORTE_BTN = (By.ID, "Vertical_mainMenu_Menu_DXI0_T")
-
     DOWN_EXCEL = (By.CSS_SELECTOR, "a[id*='dviDescargarEXCEL_View_HA']")
     BTN_CARGO = (By.CSS_SELECTOR, "a[id*='dviCargosBinding_ObjectsCreation_Menu_DXI0_T']")
 
@@ -75,18 +74,21 @@ class FiscPage(BasePage):
             return False
 
     # 2. Generar reporte
-    def generar_reporte(self):
+    def generar_reporte(self, timeout=15):
         try:
-            WebDriverWait(self.driver, 15).until(
+            WebDriverWait(self.driver, timeout).until(
                 EC.presence_of_element_located(self.REPORTE_BTN)
             )
         except:
-            raise Exception("Botón Generar Reporte no apareció")
-        
-        time.sleep(1)
+            print("Botón Generar Reporte no apareció")
+            return False  # NO rompe el flujo
+
+        time.sleep(2)
         element = self.driver.find_element(*self.REPORTE_BTN)
         self.driver.execute_script("arguments[0].click();", element)
+
         self.wait_loader()
+        return True  # éxito
 
 
     # 3. Descargar Excel
