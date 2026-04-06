@@ -77,7 +77,7 @@ class FiscPage(BasePage):
     def generar_reporte(self, timeout=15):
         try:
             WebDriverWait(self.driver, timeout).until(
-                EC.presence_of_element_located(self.REPORTE_BTN)
+                EC.element_to_be_clickable(self.REPORTE_BTN)
             )
         except:
             print("Botón Generar Reporte no apareció")
