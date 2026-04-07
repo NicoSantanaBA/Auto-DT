@@ -25,5 +25,9 @@ def crear_zip_auditoria(directorio_fuente, nombre_base="Auditoria"):
         print("No se encontraron PDFs para comprimir.")
         return None
 
+# En utils/zipper.py, cambia la parte de abajo:
+
 if __name__ == "__main__":
-    crear_zip_auditoria("reports")
+    # En lugar de "reports", busquemos en la raíz "." 
+    # pero asegúrate de filtrar para que solo agarre el PDF consolidado
+    crear_zip_auditoria(".", "Paquete_Final")

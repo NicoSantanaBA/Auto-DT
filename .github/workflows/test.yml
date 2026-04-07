@@ -53,15 +53,17 @@ jobs:
     - name: Ejecutar Tests
       run: pytest tests/test_reporte.py -s
 
-    - name: Generar PDFs y Comprimir
-      if: always() # Queremos el reporte aunque falle un test
-      run: |
-        python utils/pdf_converter.py
-        python utils/zipper.py
+    - name: Generar PDF Consolidado
+      if: always()
+      run: python utils/pdf_merger.py
 
-    - name: Subir Paquete Final
+    - name: Comprimir en ZIP
+      if: always()
+      run: python utils/zipper.py
+
+    - name: Subir Reporte Final (Artefactos)
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: Auditoria-Final-PDF
-        path: Auditoria_*.zip
+        name: Paquete-Auditoria-Final
+        path: "*.zip" # Sube cualquier archivo ZIP que encuentre en la raíz

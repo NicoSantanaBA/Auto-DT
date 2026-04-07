@@ -5,7 +5,7 @@ from PyPDF2 import PdfMerger
 
 def generar_reporte_unico(directorio_reportes, nombre_salida="Reporte_Consolidado_Auditoria.pdf"):
     if platform.system() == "Windows":
-        path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\wkhtmltopdf.exe'
+        path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
         config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
     else:
         config = pdfkit.configuration()
@@ -42,5 +42,8 @@ def generar_reporte_unico(directorio_reportes, nombre_salida="Reporte_Consolidad
     else:
         print("No se generaron reportes para unir.")
 
+# En utils/pdf_merger.py, cambia la llamada final:
 if __name__ == "__main__":
-    generar_reporte_unico("reports")
+    # Guardarlo dentro de la carpeta reports
+    ruta_final = os.path.join("reports", "Reporte_Consolidado_Auditoria.pdf")
+    generar_reporte_unico("reports", nombre_salida=ruta_final)
