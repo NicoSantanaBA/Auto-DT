@@ -13,17 +13,26 @@ def generar_html(resultados_empresa):
     bloques = ""
 
     for r in reportes:
+        # Definición de colores por estado
         if r["estado"] == "OK":
             color = "#28a745"
         elif r["estado"] == "FAIL":
             color = "#dc3545"
         else:
-            color = "#ffc107"  # amarillo
+            color = "#ffc107"  # Amarillo para NO_DATA o advertencias
+        
         badge = r["estado"]
 
+        # Generación de lista de errores
         errores_html = "".join(
             f"<li>{e}</li>" for e in r["errores"]
         ) if r["errores"] else "<li>Sin errores</li>"
+
+        # --- CORRECCIÓN DE RUTAS PARA HTML ---
+        # Reemplazamos backslashes (\) por slashes (/) para que el HTML 
+        # encuentre la imagen correctamente en cualquier sistema.
+        ruta_limpia = r["captura"].replace("\\", "/")
+        # -------------------------------------
 
         bloques += f"""
         <div class="card">
@@ -33,23 +42,27 @@ def generar_html(resultados_empresa):
             </div>
 
             <div class="card-body">
-                <h4>Errores</h4>
+                <h4>Detalle de Auditoría</h4>
                 <ul class="errores">{errores_html}</ul>
 
-                <img src="../{r["captura"]}" class="screenshot">
+                <img src="../{ruta_limpia}" class="screenshot" alt="Captura de {r['nombre']}">
             </div>
         </div>
         """
 
     html = f"""
-    <html>
+    <!DOCTYPE html>
+    <html lang="es">
     <head>
+        <meta charset="UTF-8">
+        <title>Reporte - {empresa}</title>
         <style>
             body {{
-                font-family: 'Segoe UI', Arial;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                 background: #f5f7fa;
                 margin: 0;
                 padding: 20px;
+                color: #333;
             }}
 
             .container {{
@@ -57,39 +70,38 @@ def generar_html(resultados_empresa):
                 margin: auto;
             }}
 
-            h1 {{
-                margin-bottom: 5px;
-            }}
+            h1 {{ margin-bottom: 5px; }}
 
             .header {{
                 background: white;
-                padding: 20px;
+                padding: 25px;
                 border-radius: 10px;
-                margin-bottom: 20px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+                margin-bottom: 25px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.08);
             }}
 
             .summary {{
                 display: flex;
-                gap: 20px;
-                margin-top: 10px;
+                gap: 15px;
+                margin-top: 15px;
             }}
 
             .box {{
-                padding: 10px 20px;
-                border-radius: 8px;
+                padding: 8px 18px;
+                border-radius: 6px;
                 font-weight: bold;
+                font-size: 14px;
             }}
 
-            .ok {{ background: #d4edda; color: #155724; }}
-            .fail {{ background: #f8d7da; color: #721c24; }}
-            .total {{ background: #e2e3e5; }}
+            .ok {{ background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }}
+            .fail {{ background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }}
+            .total {{ background: #e2e3e5; color: #383d41; border: 1px solid #d6d8db; }}
 
             .card {{
                 background: white;
-                margin-bottom: 20px;
-                border-radius: 10px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+                margin-bottom: 25px;
+                border-radius: 12px;
+                box-shadow: 0 3px 12px rgba(0,0,0,0.06);
                 overflow: hidden;
             }}
 
@@ -97,32 +109,36 @@ def generar_html(resultados_empresa):
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                padding: 15px 20px;
-                border-bottom: 1px solid #eee;
+                padding: 15px 25px;
+                background: #fcfcfc;
+                border-bottom: 1px solid #edf2f7;
             }}
 
             .badge {{
                 color: white;
-                padding: 5px 10px;
-                border-radius: 5px;
+                padding: 4px 12px;
+                border-radius: 4px;
                 font-size: 12px;
+                font-weight: bold;
             }}
 
-            .card-body {{
-                padding: 20px;
-            }}
+            .card-body {{ padding: 25px; }}
 
             .errores {{
                 background: #fff3cd;
-                padding: 10px;
-                border-radius: 5px;
+                padding: 15px;
+                border-radius: 6px;
+                border-left: 5px solid #ffeeba;
+                list-style-position: inside;
             }}
 
             .screenshot {{
-                margin-top: 15px;
+                margin-top: 20px;
                 max-width: 100%;
-                border-radius: 8px;
-                border: 1px solid #ddd;
+                border-radius: 10px;
+                border: 1px solid #e2e8f0;
+                display: block;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             }}
         </style>
     </head>
@@ -131,15 +147,15 @@ def generar_html(resultados_empresa):
         <div class="container">
 
             <div class="header">
-                <h1>Informe de Auditoría</h1>
+                <h1>Informe de Auditoría Automática</h1>
                 <p><b>Empresa:</b> {empresa}</p>
                 <p><b>RUT:</b> {rut}</p>
-                <p><b>Fecha:</b> {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
+                <p><b>Fecha Generación:</b> {datetime.now().strftime("%d/%m/%Y %H:%M:%S")}</p>
 
                 <div class="summary">
-                    <div class="box total">Total: {total}</div>
-                    <div class="box ok">OK: {ok_count}</div>
-                    <div class="box fail">FAIL: {fail_count}</div>
+                    <div class="box total">Reportes evaluados: {total}</div>
+                    <div class="box ok">Exitosos: {ok_count}</div>
+                    <div class="box fail">Fallidos: {fail_count}</div>
                 </div>
             </div>
 
@@ -153,7 +169,9 @@ def generar_html(resultados_empresa):
     carpeta = "reports"
     os.makedirs(carpeta, exist_ok=True)
 
-    ruta = os.path.join(carpeta, f"{empresa.replace(' ', '_')}.html")
+    # Limpiamos el nombre de la empresa para el nombre de archivo
+    nombre_seguro = empresa.replace(" ", "_").replace("/", "-")
+    ruta = os.path.join(carpeta, f"{nombre_seguro}.html")
 
     with open(ruta, "w", encoding="utf-8") as f:
         f.write(html)

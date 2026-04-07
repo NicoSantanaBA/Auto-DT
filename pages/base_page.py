@@ -55,21 +55,26 @@ class BasePage:
 
         while time.time() - tiempo_inicio < timeout:
             archivos = os.listdir(download_path)
-            # ignorar temporales
+            
+            # Filtramos para que SOLO acepte archivos que terminen en .xlsx 
+            # y que NO sean temporales (.com.google... o .crdownload)
             archivos_validos = [
-                f for f in archivos
-                if not f.endswith(".crdownload") and not f.endswith(".tmp")
+                f for f in archivos 
+                if f.endswith(".xlsx") and not f.startswith(".") and not f.endswith(".crdownload")
             ]
+            
             if archivos_validos:
                 ruta_completa = os.path.join(download_path, archivos_validos[0])
-
-                # validar que tenga tamaño > 0
+                
+                # Esperar un segundo extra para que el sistema de archivos suelte el archivo
+                time.sleep(2) 
+                
                 if os.path.getsize(ruta_completa) > 0:
                     return ruta_completa
 
             time.sleep(2)
 
-        raise Exception("No se descargó el archivo correctamente")
+        raise Exception("No se descargó el archivo .xlsx correctamente (Timeout)")
     
     def _hubo_cambio(self, timeout=3):
         try:
