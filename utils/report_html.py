@@ -1,5 +1,16 @@
 import os
+import base64 # <--- Añadido
 from datetime import datetime
+
+# Función nueva para convertir la imagen a texto
+def imagen_a_base64(ruta_imagen):
+    try:
+        if not ruta_imagen or not os.path.exists(ruta_imagen):
+            return ""
+        with open(ruta_imagen, "rb") as f:
+            return base64.b64encode(f.read()).decode('utf-8')
+    except:
+        return ""
 
 def generar_html(resultados_empresa):
     empresa = resultados_empresa["empresa"]
@@ -13,26 +24,26 @@ def generar_html(resultados_empresa):
     bloques = ""
 
     for r in reportes:
-        # Definición de colores por estado
         if r["estado"] == "OK":
             color = "#28a745"
         elif r["estado"] == "FAIL":
             color = "#dc3545"
         else:
-            color = "#ffc107"  # Amarillo para NO_DATA o advertencias
+            color = "#ffc107"
         
         badge = r["estado"]
 
-        # Generación de lista de errores
         errores_html = "".join(
             f"<li>{e}</li>" for e in r["errores"]
         ) if r["errores"] else "<li>Sin errores</li>"
 
-        # --- CORRECCIÓN DE RUTAS PARA HTML ---
-        # Reemplazamos backslashes (\) por slashes (/) para que el HTML 
-        # encuentre la imagen correctamente en cualquier sistema.
-        ruta_limpia = r["captura"].replace("\\", "/")
-        # -------------------------------------
+        # --- LÓGICA BASE64 ---
+        img_data = imagen_a_base64(r["captura"])
+        if img_data:
+            img_tag = f'<img src="data:image/png;base64,{img_data}" class="screenshot">'
+        else:
+            img_tag = '<p style="color:gray;">Captura no disponible</p>'
+        # ---------------------
 
         bloques += f"""
         <div class="card">
@@ -44,8 +55,7 @@ def generar_html(resultados_empresa):
             <div class="card-body">
                 <h4>Detalle de Auditoría</h4>
                 <ul class="errores">{errores_html}</ul>
-
-                <img src="../{ruta_limpia}" class="screenshot" alt="Captura de {r['nombre']}">
+                {img_tag}
             </div>
         </div>
         """
@@ -169,7 +179,6 @@ def generar_html(resultados_empresa):
     carpeta = "reports"
     os.makedirs(carpeta, exist_ok=True)
 
-    # Limpiamos el nombre de la empresa para el nombre de archivo
     nombre_seguro = empresa.replace(" ", "_").replace("/", "-")
     ruta = os.path.join(carpeta, f"{nombre_seguro}.html")
 
