@@ -64,3 +64,10 @@ jobs:
         path: |
           reports/
           screenshots/
+    
+    - name: Enviar Correo con Reporte
+      if: always()
+      env:
+        EMAIL_USER: ${{ secrets.EMAIL_USER }}
+        EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+      run: python utils/enviar_correo.py
