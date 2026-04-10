@@ -21,27 +21,20 @@ def generar_html(resultados_empresa):
     ok_count = sum(1 for r in reportes if r["estado"] == "OK")
     fail_count = total - ok_count
 
-    # 🚀 1. GENERAR LA VISTA DE PÁJARO (Tabla de Resumen con Vínculos)
+    # 🚀 1. GENERAR LA VISTA DE PÁJARO (Solo tabla informativa, sin enlaces)
     filas_resumen = ""
     for i, r in enumerate(reportes):
-        # Definir color según estado para el resumen
         if r["estado"] == "OK":
             color_resumen = "#28a745"
         elif r["estado"] == "FAIL":
             color_resumen = "#dc3545"
         else:
-            color_resumen = "#ffc107" # Para NO_DATA
+            color_resumen = "#ffc107"
 
-        # 🚩 CAMBIO PARA EL ERROR: Usamos un ID que incluya el RUT para que sea único en todo el PDF
-        id_vinculo = f"reporte_{rut}_{i}"
-
-        # El href="#{id_vinculo}" ahora es único por empresa
         filas_resumen += f"""
         <tr>
-            <td style="padding: 10px; border-bottom: 1px solid #eee;">
-                <a href="#{id_vinculo}" style="text-decoration: none; color: #007bff; font-weight: bold;">
-                    {r["nombre"]}
-                </a>
+            <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold;">
+                {r["nombre"]}
             </td>
             <td style="padding: 10px; border-bottom: 1px solid #eee; color: {color_resumen}; font-weight: bold;">
                 {r["estado"]}
@@ -70,7 +63,7 @@ def generar_html(resultados_empresa):
     </div>
     """
 
-    # 🚀 2. GENERAR BLOQUES DE DETALLE (Con IDs para navegación)
+    # 🚀 2. GENERAR BLOQUES DE DETALLE
     bloques = ""
     for i, r in enumerate(reportes):
         if r["estado"] == "OK":
@@ -92,15 +85,11 @@ def generar_html(resultados_empresa):
         else:
             img_tag = '<p style="color:gray; padding:20px; border:1px dashed #ccc;">Captura no disponible</p>'
 
-        # 🚩 CAMBIO PARA EL ERROR: El ID debe coincidir con el del índice arriba
-        id_vinculo = f"reporte_{rut}_{i}"
-        
-        # 🚩 CAMBIO PARA LA HOJA APARTE: El primer reporte (i=0) fuerza un salto de página antes de empezar
+        # Mantenemos el salto de página para que el primer reporte (i=0) se vaya a la hoja 2
         estilo_salto = "page-break-before: always;" if i == 0 else ""
 
-        # Agregamos id="{id_vinculo}" para que el vínculo del índice funcione
         bloques += f"""
-        <div class="card" id="{id_vinculo}" style="{estilo_salto}">
+        <div class="card" style="{estilo_salto}">
             <div class="card-header">
                 <h2 style="margin:0;">{r["nombre"]}</h2>
                 <span class="badge" style="background:{color}">{badge}</span>
@@ -110,9 +99,6 @@ def generar_html(resultados_empresa):
                 <h4 style="margin-top:0;">Resultado de Auditoría</h4>
                 <ul class="errores">{errores_html}</ul>
                 {img_tag}
-                <div style="text-align: right; margin-top: 10px;">
-                    <a href="#" style="color: #999; font-size: 12px; text-decoration: none;">↑ Volver al índice</a>
-                </div>
             </div>
         </div>
         """
