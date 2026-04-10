@@ -51,8 +51,8 @@ def test_reporte(driver, empresa):
         estado = "OK"
         errores_lista = []
 
-        # OBTENER NOMBRE FORMAL DESDE FISC_PAGE
-        nombre_formal = fisc.REPORTE_URLS.get(reporte, reporte)
+        # 🚀 CORRECCIÓN: Usamos REPORTE_NOMBRES_FORMALES que es el que está en FiscPage
+        nombre_formal = fisc.REPORTE_NOMBRES_FORMALES.get(reporte, reporte)
 
         print(f"\n>>> Iniciando reporte: {nombre_formal}")
 
@@ -148,7 +148,7 @@ def test_reporte(driver, empresa):
 
             captura = guardar_captura(driver, empresa["nombre"], f"{reporte}_error")
 
-        # SIEMPRE guardar resultado
+        # SIEMPRE guardar resultado con el nombre formal
         resultados_empresa["reportes"].append({
             "nombre": nombre_formal,
             "estado": estado,
