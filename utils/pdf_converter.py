@@ -6,14 +6,14 @@ from pdf2image import convert_from_path
 # Ruta a los binarios de Poppler en Windows.
 # Descarga desde: https://github.com/oschwartz10612/poppler-windows/releases
 # y ajusta esta ruta al directorio 'bin' de tu instalación.
-POPPLER_PATH_WINDOWS = r"C:\poppler\Library\bin"
+POPPLER_PATH_WINDOWS = r"C:\poppler-25.12.0\Library\bin"
 
 
 def pdf_pagina1_a_imagen(pdf_path, output_dir, nombre_base, dpi=200):
     """Convierte la primera página de un PDF a imagen PNG de alta calidad."""
     try:
         kwargs = {"dpi": dpi, "first_page": 1, "last_page": 1}
-        if platform.system() == "Windows":
+        if platform.system() == "Windows" and os.environ.get("CI") != "true":
             kwargs["poppler_path"] = POPPLER_PATH_WINDOWS
 
         imagenes = convert_from_path(pdf_path, **kwargs)

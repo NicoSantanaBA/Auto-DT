@@ -116,6 +116,18 @@ def test_reporte(driver, empresa):
             else:
                 print(f"    ✓ Reporte generado: {nombre_formal}")
 
+                if fisc.hay_tabla_vacia():
+                    print(f"    Sin datos para mostrar en {nombre_formal}")
+                    captura = guardar_captura(driver, empresa["nombre"], f"{reporte}_tabla_vacia")
+                    errores_lista.append("Sin datos para mostrar")
+                    resultados_empresa["reportes"].append({
+                        "nombre": nombre_formal,
+                        "estado": "OK",
+                        "errores": errores_lista,
+                        "captura": captura
+                    })
+                    continue
+
                 # Descargar PDF y convertir primera página a imagen
                 limpiar_descargas(download_path)
                 try:

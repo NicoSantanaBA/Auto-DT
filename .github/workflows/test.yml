@@ -2,10 +2,10 @@ name: Selenium Tests
 
 on:
   push:
-    branches: [ "ci-cd-tests", "feature-pdf-email" ] # Agregué tu rama nueva aquí
+    branches: [ "ci-cd-tests", "feature-pdf-email" ]
   pull_request:
     branches: [ "ci-cd-tests" ]
-  workflow_dispatch: #¡ESTA LÍNEA ACTIVA EL BOTÓN "RUN WORKFLOW"!
+  workflow_dispatch: 
 
 jobs:
   test:
@@ -21,15 +21,16 @@ jobs:
         python-version: '3.13'
         cache: 'pip'
 
-    - name: Instalar dependencias
+    # MOVIDO AQUÍ: Primero preparamos el sistema con los motores de imagen/PDF
+    - name: Instalar dependencias del sistema (Poppler y wkhtmltopdf)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wkhtmltopdf poppler-utils
+
+    - name: Instalar dependencias de Python
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-
-    - name: Instalar wkhtmltopdf (Motor para el PDF)
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y wkhtmltopdf
 
     - name: Instalar Chrome
       uses: browser-actions/setup-chrome@v1
