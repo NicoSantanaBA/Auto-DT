@@ -48,8 +48,6 @@ def test_reporte(driver, empresa):
         "reportes": []
     }
 
-    loader_timeout = False
-
     for reporte in empresa["reportes"]:
         estado = "OK"
         errores_lista = []
@@ -151,7 +149,17 @@ def test_reporte(driver, empresa):
             errores_empresa.append(f"{nombre_formal}: Interrumpido por tiempo de carga excedido")
 
             captura = guardar_captura(driver, empresa["nombre"], f"{reporte}_timeout")
-            loader_timeout = True
+
+            print(f"    ↺ Deteniendo carga pendiente y volviendo al menú...")
+            driver.execute_script('window.stop();')
+            driver.get(empresa['url_menu'])
+            try:
+                time.sleep(3)
+                fisc.wait_loader()
+                fisc.wait_for_visible(fisc.LIST_DT)
+                print(f"    ✓ Menú cargado, continuando con siguiente reporte")
+            except Exception as ex:
+                print(f"    ✗ No se pudo confirmar carga del menú ({ex}), continuando igual")
 
         except Exception as e:
             print(f"Error inesperado en {nombre_formal}: {e}")
@@ -169,10 +177,6 @@ def test_reporte(driver, empresa):
             "errores": errores_lista,
             "captura": captura
         })
-
-        if loader_timeout:
-            print(f"    ✗ Deteniendo empresa '{empresa['nombre']}' por tiempo de carga excedido")
-            break
 
     # SIEMPRE generar HTML
     ruta_html = generar_html(resultados_empresa)

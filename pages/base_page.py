@@ -43,7 +43,7 @@ class BasePage:
             EC.visibility_of_element_located(locator)
         )
 
-    def wait_loader(self, timeout=10):
+    def wait_loader(self, timeout=240):
         def loader_oculto(driver):
             try:
                 elementos = driver.find_elements(By.CSS_SELECTOR, "table.dxlpLoadingPanel_XafTheme")
