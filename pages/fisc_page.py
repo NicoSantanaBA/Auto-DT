@@ -174,7 +174,7 @@ class FiscPage(BasePage):
     def hay_tabla_vacia(self, timeout=5):
         try:
             WebDriverWait(self.driver, timeout).until(
-                EC.visibility_of_element_located(self.TABLA_VACIA)
+                EC.presence_of_element_located(self.TABLA_VACIA)
             )
             return True
         except:
