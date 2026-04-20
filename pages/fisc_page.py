@@ -107,7 +107,12 @@ class FiscPage(BasePage):
 
         tipo_alerta = self._detectar_toast_post_click(timeout=5)
 
-        self.wait_loader()
+        if tipo_alerta is None:
+            # Sin alerta → esperar loader normalmente
+            self.wait_loader()
+
+        # Con alerta → retornar de inmediato para que el llamador capture
+        # la pantalla mientras el toast todavía es visible
         return True, tipo_alerta
 
     def _detectar_toast_post_click(self, timeout=5):

@@ -47,21 +47,21 @@ def _intentar_reporte(driver, fisc, empresa, reporte, download_path, nombre_form
 
     ok_reporte, tipo_alerta = fisc.generar_reporte()
 
-    # ── Alerta ConnectionString: error transitorio del servidor ───────────────
-    # Activa el soft-reset y el segundo intento.
-    if tipo_alerta == "error_conexion" or fisc.hay_error_conexion():
+    # ── Alerta detectada: tomar captura AHORA antes de que el toast desaparezca ──
+    # generar_reporte() retornó sin llamar wait_loader() cuando hay toast,
+    # así que el toast todavía está visible en este punto.
+    if tipo_alerta == "error_conexion":
         print(f"    ✗ Error de servidor en {nombre_formal}: ConnectionString no inicializado")
-        time.sleep(1)  # esperar que el fade-in complete → alerta visible y sólida en la captura
         captura = guardar_captura(driver, empresa["nombre"], f"{reporte}_error_conexion")
-        time.sleep(3)  # esperar que el toast desaparezca antes de resetear
+        time.sleep(3)  # esperar que el toast desaparezca
+        fisc.wait_loader()  # esperar loader pendiente
         raise ReporteError("Error de servidor: No se ha inicializado la propiedad ConnectionString")
 
-    # ── Sin datos: NO_DATA, no es un fallo, no activa reintento ───────────────
-    if tipo_alerta == "sin_datos" or fisc.hay_sin_datos():
+    if tipo_alerta == "sin_datos":
         print(f"    {nombre_formal} sin datos")
-        time.sleep(1)  # esperar que el fade-in complete → alerta visible y sólida en la captura
         captura = guardar_captura(driver, empresa["nombre"], f"{reporte}_sin_datos")
-        time.sleep(3)  # esperar que el toast desaparezca antes de continuar
+        time.sleep(3)  # esperar que el toast desaparezca
+        fisc.wait_loader()  # esperar loader pendiente
         return "NO_DATA", ["No hay trabajadores para este reporte"], captura
 
     if not ok_reporte:
@@ -170,12 +170,15 @@ def test_reporte(driver, empresa):
 
                 if intento == 0:
                     # ── Acción de Recuperación ──────────────────────────────
-                    # Guardamos evidencia del primer fallo
                     captura = guardar_captura(driver, empresa["nombre"], f"{reporte}_error_intento1")
-                    print(f"    ↺ Recuperando: deteniendo carga y volviendo al menú...")
+                    print(f"    ↺ Recuperando: deteniendo carga y volviendo al selector de empresas...")
                     driver.execute_script('window.stop();')
-                    driver.get(empresa['url_menu'])
-                    time.sleep(5)
+                    driver.get("https://asistenciadt.baplicada.cl/Login.aspx?FiscalizacionDT=Login")
+                    time.sleep(3)
+                    init.seleccionar_empresa_por_rut(empresa["rut"])
+                    init.fisc_init()
+                    init.confirm()
+                    time.sleep(3)
                     print(f"    ↺ Segundo intento para: {nombre_formal}")
                     # El bucle continúa con intento == 1
 
