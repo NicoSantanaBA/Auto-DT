@@ -27,6 +27,11 @@ class RecoverableError(Exception):
     pass
 
 
+class ConexionError(ReporteError):
+    """Error de conexión con la BD — FAIL inmediato + session recovery antes del siguiente reporte."""
+    pass
+
+
 def _intentar_reporte(driver, fisc, empresa, reporte, download_path, nombre_formal):
     """
     Ejecuta el flujo completo de un reporte en un único intento.
@@ -50,6 +55,11 @@ def _intentar_reporte(driver, fisc, empresa, reporte, download_path, nombre_form
         fisc.seleccionar_cargo(empresa["Cargo"])
         print(f"    ✓ Cargo filtrado: {empresa['Cargo']}")
 
+    if not fisc.verificar_empresa(empresa["nom_informe"]):
+        raise RecoverableError(
+            f"Sesión en empresa incorrecta antes de generar reporte ({nombre_formal})"
+        )
+
     ok_reporte, tipo_alerta = fisc.generar_reporte()
 
     # ── Alerta detectada: tomar captura AHORA antes de que el toast desaparezca ──
@@ -61,7 +71,7 @@ def _intentar_reporte(driver, fisc, empresa, reporte, download_path, nombre_form
         captura = guardar_captura(driver, empresa["nombre"], f"{reporte}_error_conexion")
         time.sleep(3)
         fisc.wait_loader()
-        raise ReporteError("Error de conexión con la base de datos")
+        raise ConexionError("Error de conexión con la base de datos")
 
     if tipo_alerta == "sin_datos":
         print(f"    {nombre_formal} sin datos")
@@ -188,6 +198,25 @@ def test_reporte(driver, empresa):
                     errores_lista = [error_msg]
                     errores_empresa.append(f"{nombre_formal}: {error_msg}")
                     captura = guardar_captura(driver, empresa["nombre"], f"{reporte}_error_final")
+
+            except ConexionError as e:
+                # ── Error de conexión BD → FAIL inmediato + session recovery ──
+                # La sesión del servidor queda corrupta tras este error;
+                # re-seleccionamos la empresa para restaurarla antes del siguiente reporte.
+                error_msg = str(e)
+                print(f"    ✗ {nombre_formal}: {error_msg}")
+                estado = "FAIL"
+                errores_lista = [error_msg]
+                errores_empresa.append(f"{nombre_formal}: {error_msg}")
+                print(f"    ↺ Restaurando sesión: volviendo al selector de empresas...")
+                driver.execute_script('window.stop();')
+                driver.get("https://asistenciadt.baplicada.cl/Login.aspx?FiscalizacionDT=Login")
+                time.sleep(3)
+                init.seleccionar_empresa_por_rut(empresa["rut"])
+                init.fisc_init()
+                init.confirm()
+                time.sleep(3)
+                break
 
             except Exception as e:
                 # ── Cualquier otro error → FAIL inmediato, sin recovery ────

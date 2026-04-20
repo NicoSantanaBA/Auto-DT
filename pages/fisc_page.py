@@ -240,6 +240,21 @@ class FiscPage(BasePage):
         except:
             return False
 
+    def verificar_empresa(self, nom_informe, timeout=10):
+        """
+        Verifica que el span del título coincide con nom_informe.
+        Retorna True si coincide, False si no coincide o no aparece.
+        """
+        try:
+            locator = (By.XPATH,
+                f"//span[contains(@class,'MainMenuTruncateCaption') and @title='{nom_informe}']")
+            WebDriverWait(self.driver, timeout).until(
+                EC.presence_of_element_located(locator)
+            )
+            return True
+        except:
+            return False
+
     def pantalla_en_blanco(self, timeout=3):
         """
         Detecta si el formulario del reporte no cargó (pantalla en blanco).
