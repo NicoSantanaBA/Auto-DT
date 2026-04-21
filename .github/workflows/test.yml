@@ -47,10 +47,14 @@ jobs:
 
     - name: Generar PDF Consolidado
       if: always()
+      env:
+        PYTHONPATH: ${{ github.workspace }}
       run: python utils/pdf_merger.py
 
     - name: Comprimir en ZIP
       if: always()
+      env:
+        PYTHONPATH: ${{ github.workspace }}
       run: python utils/zipper.py
 
     - name: Subir Reporte Final (ZIP)
@@ -58,7 +62,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: Paquete-Auditoria-Final
-        path: "*.zip" 
+        path: "*.zip"
 
     - name: Subir evidencias sueltas (Opcional)
       if: always()
@@ -68,10 +72,11 @@ jobs:
         path: |
           reports/
           screenshots/
-    
+
     - name: Enviar Correo con Reporte
       if: always()
       env:
         EMAIL_USER: ${{ secrets.EMAIL_USER }}
         EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+        PYTHONPATH: ${{ github.workspace }}
       run: python utils/enviar_correo.py
