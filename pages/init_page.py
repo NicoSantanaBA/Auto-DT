@@ -46,7 +46,3 @@ class InitPage(BasePage):
 
         return nombre_valor == rut_valor
 
-    def is_error_user_displayed(self):
-        return self.driver.find_element(By.XPATH, "//div[contains(@class, 'dx-toast-message') and contains(text(), 'El usuario indicado no es valido')]").is_displayed()
-
-    

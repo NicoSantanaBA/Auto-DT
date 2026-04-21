@@ -104,14 +104,3 @@ class BasePage:
 
         raise Exception("No se descargó el archivo .xlsx correctamente (Timeout)")
     
-    def _hubo_cambio(self, timeout=3):
-        try:
-            WebDriverWait(self.driver, timeout).until(
-                lambda d: any(
-                    el.is_displayed()
-                    for el in d.find_elements(By.CSS_SELECTOR, "table.dxlpLoadingPanel_XafTheme")
-                )
-            )
-            return True  # apareció loader → sí hubo acción
-        except:
-            return False  # no apareció nada → no pasó nada

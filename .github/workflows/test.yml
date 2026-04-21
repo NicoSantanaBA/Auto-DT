@@ -41,6 +41,8 @@ jobs:
       env:
         CI: "true"
         TZ: "America/Santiago"
+        PORTAL_USER: ${{ secrets.PORTAL_USER }}
+        PORTAL_PASS: ${{ secrets.PORTAL_PASS }}
       run: pytest tests/test_reporte.py -s
 
     - name: Generar PDF Consolidado

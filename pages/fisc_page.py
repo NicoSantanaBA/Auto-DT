@@ -134,28 +134,24 @@ class FiscPage(BasePage):
         except:
             return None
 
-    # 3. Descargar PDF del reporte
-    def descargar_pdf(self, download_path):
+    def _click_descarga(self, locator):
         boton = WebDriverWait(self.driver, 20).until(
-            EC.presence_of_element_located(self.DOWN_PDF)
+            EC.presence_of_element_located(locator)
         )
         time.sleep(2)
         self.driver.execute_script("arguments[0].scrollIntoView(true);", boton)
         time.sleep(1)
         self.driver.execute_script("arguments[0].click();", boton)
+
+    # 3. Descargar PDF del reporte
+    def descargar_pdf(self, download_path):
+        self._click_descarga(self.DOWN_PDF)
         return self.wait_for_pdf(download_path)
 
     # 4. Descargar Excel
     def descargar_excel(self, download_path):
-        boton = WebDriverWait(self.driver, 20).until(
-            EC.presence_of_element_located(self.DOWN_EXCEL)
-        )
-        time.sleep(2)
-        self.driver.execute_script("arguments[0].scrollIntoView(true);", boton)
-        time.sleep(1)
-        self.driver.execute_script("arguments[0].click();", boton)
-        archivo = self.wait_for_file(download_path)
-        return archivo
+        self._click_descarga(self.DOWN_EXCEL)
+        return self.wait_for_file(download_path)
 
     # 4. Flujo completo
     def flujo_reporte(self, nombre_reporte, download_path):
