@@ -1,4 +1,6 @@
+import os
+
 USER = [{
-    "usuario": "nicolas.perez@baplicada.cl",
-    "password": "PizitO6h"
+    "usuario": os.getenv("PORTAL_USER"),
+    "password": os.getenv("PORTAL_PASS")
 }]

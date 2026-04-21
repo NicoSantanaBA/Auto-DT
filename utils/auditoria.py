@@ -1,6 +1,9 @@
 import pandas as pd
 import re
 import os
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 # CONVERSIÓN TIEMPO (Soporta objetos datetime y strings con signo)
 def tiempo_a_segundos(valor):
@@ -8,7 +11,7 @@ def tiempo_a_segundos(valor):
         return 0
     if hasattr(valor, 'hour'):
         return valor.hour * 3600 + valor.minute * 60 + valor.second
-    
+
     t = str(valor).strip().replace(" ", "").replace("+", "")
     try:
         signo = -1 if t.startswith("-") else 1
@@ -23,7 +26,6 @@ def calcular_duracion_colacion(rango_texto):
     if pd.isna(rango_texto) or rango_texto == "No Aplica":
         return 0
     try:
-        # Separa por cualquier tipo de guion
         partes = re.split(r'[-–—]', str(rango_texto).replace(" ", ""))
         if len(partes) == 2:
             inicio = tiempo_a_segundos(partes[0])
@@ -49,7 +51,6 @@ def calcular_duracion(inicio, fin):
 # AUDITORÍA PRINCIPAL (Limitada a 2 primeros colaboradores)
 def auditar_excel_final(ruta_excel):
     try:
-        # Aseguramos que la ruta sea válida para el sistema operativo actual
         ruta_ajustada = os.path.abspath(ruta_excel)
         df = pd.read_excel(ruta_ajustada, header=None)
     except Exception as e:
@@ -58,42 +59,34 @@ def auditar_excel_final(ruta_excel):
     errores = []
     colaboradores_contados = 0
     nombre_actual = ""
-    
-    # Acumuladores semanales
+
     s_pactada, s_real, s_faltante, s_extra = 0, 0, 0, 0
 
     for i, fila in df.iterrows():
-        # Identificar Colaborador
         if "Nombre:" in str(fila.values):
             colaboradores_contados += 1
             if colaboradores_contados > 2:
                 break
-            # El nombre suele estar en la columna 10 según tu lógica
             nombre_actual = str(fila[10]) if not pd.isna(fila[10]) else "Desconocido"
 
         fecha_str = str(fila[0])
 
-        # --- FILAS DIARIAS ---
         if re.match(r'\d{2}/\d{2}/\d{2}', fecha_str):
             colacion = calcular_duracion_colacion(fila[6])
 
-            # 1. PACTADA
             p_in = tiempo_a_segundos(fila[1])
             p_out = tiempo_a_segundos(fila[2])
             if p_in != 0 and p_out != 0:
                 s_pactada += (calcular_duracion(p_in, p_out) - colacion)
 
-            # 2. REAL
             r_in = tiempo_a_segundos(fila[3])
             r_out = tiempo_a_segundos(fila[5])
             if r_in != 0 and r_out != 0:
                 s_real += (calcular_duracion(r_in, r_out) - colacion)
 
-            # 3. EXTRAS Y FALTANTES
             s_faltante += tiempo_a_segundos(fila[9])
             s_extra += tiempo_a_segundos(fila[11])
 
-        # --- TOTAL SEMANAL ---
         elif "Total Semanal" in fecha_str:
             t_pact_ex = tiempo_a_segundos(fila[1])
             t_real_ex = tiempo_a_segundos(fila[3])
@@ -111,7 +104,6 @@ def auditar_excel_final(ruta_excel):
             if abs(t_bal_calc - t_bal_ex) > 10:
                 errores.append(f"{id_info} | BALANCE ERROR | Esp: {segundos_a_texto(t_bal_calc)} | Ex: {segundos_a_texto(t_bal_ex)}")
 
-            # RESET SEMANAL
             s_pactada, s_real, s_faltante, s_extra = 0, 0, 0, 0
 
     if errores:
@@ -120,17 +112,15 @@ def auditar_excel_final(ruta_excel):
 
 # --- BLOQUE DE PRUEBA LOCAL ---
 if __name__ == "__main__":
-    # Usamos una ruta relativa que funcione en cualquier carpeta
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    # Suponiendo que tienes un archivo de prueba en una carpeta 'data'
     ARCHIVO_PRUEBA = os.path.join(BASE_DIR, "..", "downloads", "Reporte de jornada diaria ENAP.xlsx")
-    
-    print(f"Probando auditoría con: {ARCHIVO_PRUEBA}")
+
+    logger.info(f"Probando auditoría con: {ARCHIVO_PRUEBA}")
     resultado, lista_errores = auditar_excel_final(ARCHIVO_PRUEBA)
 
     if resultado:
-        print("Auditoría exitosa.")
+        logger.info("Auditoría exitosa.")
     else:
-        print("Errores encontrados:")
+        logger.error("Errores encontrados:")
         for err in lista_errores:
-            print(err)
+            logger.error(err)

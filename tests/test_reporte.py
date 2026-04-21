@@ -8,11 +8,14 @@ from pages.fisc_page import FiscPage
 from pages.base_page import LoaderTimeoutError
 from utils.helpers import limpiar_descargas
 from utils.auditoria import auditar_excel_final
-import time
 from utils.screenshots import guardar_captura
 from utils.report_html import generar_html
 from utils.pdf_converter import pdf_pagina1_a_imagen
+from utils.logger import get_logger
+import time
 import os
+
+logger = get_logger(__name__)
 
 
 class ReporteError(Exception):
@@ -51,14 +54,12 @@ def _intentar_reporte(driver, fisc, empresa, reporte, download_path, nombre_form
 
     fisc.seleccionar_reporte(reporte)
 
-    # Detección temprana de pantalla en blanco: si el formulario no cargó,
-    # no esperamos el timeout largo de generar_reporte (15 s), fallamos de inmediato.
     if fisc.pantalla_en_blanco(timeout=3):
         raise RecoverableError("Pantalla en blanco: el formulario del reporte no cargó")
 
     if empresa["filtro_cargo"] and reporte not in ["diario", "incidentes"]:
         fisc.seleccionar_cargo(empresa["Cargo"])
-        print(f"    ✓ Cargo filtrado: {empresa['Cargo']}")
+        logger.info(f"Cargo filtrado: {empresa['Cargo']}")
 
     if not fisc.verificar_empresa(empresa["nom_informe"]):
         raise SesionIncorrectaError(
@@ -67,11 +68,8 @@ def _intentar_reporte(driver, fisc, empresa, reporte, download_path, nombre_form
 
     ok_reporte, tipo_alerta = fisc.generar_reporte()
 
-    # ── Alerta detectada: tomar captura AHORA antes de que el toast desaparezca ──
-    # generar_reporte() retornó sin llamar wait_loader() cuando hay toast,
-    # así que el toast todavía está visible en este punto.
     if tipo_alerta == "error_conexion":
-        print(f"    ✗ Error de conexión en {nombre_formal}")
+        logger.error(f"Error de conexión en {nombre_formal}")
         time.sleep(0.5)
         captura = guardar_captura(driver, empresa["nombre"], f"{reporte}_error_conexion")
         time.sleep(3)
@@ -79,7 +77,7 @@ def _intentar_reporte(driver, fisc, empresa, reporte, download_path, nombre_form
         raise ConexionError("Error de conexión con la base de datos")
 
     if tipo_alerta == "sin_datos":
-        print(f"    {nombre_formal} sin datos")
+        logger.warning(f"{nombre_formal} sin datos")
         time.sleep(0.5)
         captura = guardar_captura(driver, empresa["nombre"], f"{reporte}_sin_datos")
         time.sleep(3)
@@ -94,14 +92,13 @@ def _intentar_reporte(driver, fisc, empresa, reporte, download_path, nombre_form
     if not fisc.reporte_tiene_datos():
         raise RecoverableError("No cargó el reporte")
 
-    print(f"    ✓ Reporte generado: {nombre_formal}")
+    logger.info(f"Reporte generado: {nombre_formal}")
     captura = guardar_captura(driver, empresa["nombre"], f"{reporte}_estado")
 
     if fisc.hay_tabla_vacia():
-        print(f"    Sin datos para mostrar en {nombre_formal}")
+        logger.info(f"Sin datos para mostrar en {nombre_formal}")
         return "OK", ["Sin datos para mostrar"], captura
 
-    # Tiene datos reales: reemplazar captura con imagen del PDF
     limpiar_descargas(download_path)
     try:
         pdf_path = fisc.descargar_pdf(download_path)
@@ -109,25 +106,25 @@ def _intentar_reporte(driver, fisc, empresa, reporte, download_path, nombre_form
         captura_pdf = pdf_pagina1_a_imagen(pdf_path, screenshots_dir, f"{reporte}_pdf")
         if captura_pdf:
             captura = captura_pdf
-        print(f"    ✓ Imagen del PDF generada: {captura}")
+        logger.info(f"Imagen del PDF generada: {captura}")
     except Exception as e_pdf:
-        print(f"    ✗ No se pudo obtener imagen del PDF: {e_pdf}")
+        logger.warning(f"No se pudo obtener imagen del PDF: {e_pdf}")
 
     if reporte == "jor_diaria":
         limpiar_descargas(download_path)
         archivo = fisc.descargar_excel(download_path)
 
         if not archivo:
-            print(f"    ✗ No se descargó archivo")
+            logger.error("No se descargó archivo Excel")
             raise ReporteError("No se descargó archivo Excel")
 
-        print(f"    ✓ Archivo descargado: {archivo}")
+        logger.info(f"Archivo descargado: {archivo}")
         ok, errores = auditar_excel_final(archivo)
 
         if ok:
-            print("    ✓ Auditoría OK")
+            logger.info("Auditoría OK")
         else:
-            print(f"    ✗ Auditoría FALLÓ: {errores}")
+            logger.error(f"Auditoría FALLÓ: {errores}")
             raise ReporteError(f"Auditoría fallida: {errores}", errores_lista=errores)
 
     return "OK", [], captura
@@ -135,21 +132,17 @@ def _intentar_reporte(driver, fisc, empresa, reporte, download_path, nombre_form
 
 @pytest.mark.parametrize("empresa", EMPRESAS, ids=[e["nombre"] for e in EMPRESAS])
 def test_reporte(driver, empresa):
-    # Esto busca la carpeta 'downloads' en la raíz del proyecto
     download_path = os.path.abspath("downloads")
 
-    # Asegurarnos de que la carpeta existe antes de limpiar
     if not os.path.exists(download_path):
         os.makedirs(download_path)
 
     limpiar_descargas(download_path)
 
-    # LOGIN
     login = LoginPage(driver)
     login.load("https://asistenciadt.baplicada.cl/Login.aspx?FiscalizacionDT=Login")
     login.login(USER[0]["usuario"], USER[0]["password"])
 
-    # EMPRESA
     init = InitPage(driver)
     init.seleccionar_empresa_por_rut(empresa["rut"])
     init.fisc_init()
@@ -172,9 +165,9 @@ def test_reporte(driver, empresa):
         errores_lista = []
         captura = None
 
-        print(f"\n>>> Iniciando reporte: {nombre_formal}")
+        logger.info(f">>> Iniciando reporte: {nombre_formal}")
 
-        sesion_incorrecta_max = 3  # hasta 2 recuperaciones para sesión incorrecta
+        sesion_incorrecta_max = 3
         max_intentos_default = 2
 
         for intento in range(sesion_incorrecta_max):
@@ -186,11 +179,11 @@ def test_reporte(driver, empresa):
 
             except SesionIncorrectaError as e:
                 error_msg = str(e)
-                print(f"    ✗ {nombre_formal} (intento {intento + 1}/{sesion_incorrecta_max}): {error_msg}")
+                logger.warning(f"{nombre_formal} (intento {intento + 1}/{sesion_incorrecta_max}): {error_msg}")
 
                 if intento < sesion_incorrecta_max - 1:
                     captura = guardar_captura(driver, empresa["nombre"], f"{reporte}_error_sesion_intento{intento + 1}")
-                    print(f"    ↺ Recuperando sesión incorrecta: volviendo al selector de empresas...")
+                    logger.warning("Recuperando sesión incorrecta: volviendo al selector de empresas...")
                     driver.execute_script('window.stop();')
                     driver.get("https://asistenciadt.baplicada.cl/Login.aspx?FiscalizacionDT=Login")
                     time.sleep(3)
@@ -198,22 +191,21 @@ def test_reporte(driver, empresa):
                     init.fisc_init()
                     init.confirm()
                     time.sleep(3)
-                    print(f"    ↺ Intento {intento + 2} para: {nombre_formal}")
+                    logger.info(f"Intento {intento + 2} para: {nombre_formal}")
                 else:
-                    print(f"    ✗✗ Todos los intentos de sesión fallaron para {nombre_formal}")
+                    logger.error(f"Todos los intentos de sesión fallaron para {nombre_formal}")
                     estado = "FAIL"
                     errores_lista = [error_msg]
                     errores_empresa.append(f"{nombre_formal}: {error_msg}")
                     captura = guardar_captura(driver, empresa["nombre"], f"{reporte}_error_final")
 
             except RecoverableError as e:
-                # ── Botón no encontrado / Pantalla en blanco → recovery (1 reintento) ────
                 error_msg = str(e)
-                print(f"    ✗ {nombre_formal} (intento {intento + 1}/{max_intentos_default}): {error_msg}")
+                logger.warning(f"{nombre_formal} (intento {intento + 1}/{max_intentos_default}): {error_msg}")
 
                 if intento == 0:
                     captura = guardar_captura(driver, empresa["nombre"], f"{reporte}_error_intento1")
-                    print(f"    ↺ Recuperando: volviendo al selector de empresas...")
+                    logger.warning("Recuperando: volviendo al selector de empresas...")
                     driver.execute_script('window.stop();')
                     driver.get("https://asistenciadt.baplicada.cl/Login.aspx?FiscalizacionDT=Login")
                     time.sleep(3)
@@ -221,9 +213,9 @@ def test_reporte(driver, empresa):
                     init.fisc_init()
                     init.confirm()
                     time.sleep(3)
-                    print(f"    ↺ Segundo intento para: {nombre_formal}")
+                    logger.info(f"Segundo intento para: {nombre_formal}")
                 else:
-                    print(f"    ✗✗ Segundo intento fallido para {nombre_formal}")
+                    logger.error(f"Segundo intento fallido para {nombre_formal}")
                     estado = "FAIL"
                     errores_lista = [error_msg]
                     errores_empresa.append(f"{nombre_formal}: {error_msg}")
@@ -231,15 +223,12 @@ def test_reporte(driver, empresa):
                     break
 
             except ConexionError as e:
-                # ── Error de conexión BD → FAIL inmediato + session recovery ──
-                # La sesión del servidor queda corrupta tras este error;
-                # re-seleccionamos la empresa para restaurarla antes del siguiente reporte.
                 error_msg = str(e)
-                print(f"    ✗ {nombre_formal}: {error_msg}")
+                logger.error(f"{nombre_formal}: {error_msg}")
                 estado = "FAIL"
                 errores_lista = [error_msg]
                 errores_empresa.append(f"{nombre_formal}: {error_msg}")
-                print(f"    ↺ Restaurando sesión: volviendo al selector de empresas...")
+                logger.warning("Restaurando sesión: volviendo al selector de empresas...")
                 driver.execute_script('window.stop();')
                 driver.get("https://asistenciadt.baplicada.cl/Login.aspx?FiscalizacionDT=Login")
                 time.sleep(3)
@@ -250,16 +239,14 @@ def test_reporte(driver, empresa):
                 break
 
             except Exception as e:
-                # ── Cualquier otro error → FAIL inmediato, sin recovery ────
                 error_msg = str(e)
                 errores_lista = getattr(e, 'errores_lista', [error_msg])
-                print(f"    ✗ {nombre_formal}: {error_msg}")
+                logger.error(f"{nombre_formal}: {error_msg}")
                 estado = "FAIL"
                 errores_empresa.append(f"{nombre_formal}: {error_msg}")
                 captura = guardar_captura(driver, empresa["nombre"], f"{reporte}_error")
                 break
 
-        # SIEMPRE guardar resultado con el nombre formal
         resultados_empresa["reportes"].append({
             "nombre": nombre_formal,
             "estado": estado,
@@ -267,9 +254,7 @@ def test_reporte(driver, empresa):
             "captura": captura
         })
 
-    # SIEMPRE generar HTML
     ruta_html = generar_html(resultados_empresa)
-    print(f"\nReporte generado: {ruta_html}")
+    logger.info(f"Reporte HTML generado: {ruta_html}")
 
-    # ASSERT FINAL
     assert not errores_empresa, f"{empresa['nombre']} | {errores_empresa}"

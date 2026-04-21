@@ -2,6 +2,9 @@ import pdfkit
 import os
 import platform
 from pdf2image import convert_from_path
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 POPPLER_PATH_WINDOWS = r"C:\poppler-25.12.0\Library\bin"
 
@@ -21,16 +24,14 @@ def pdf_pagina1_a_imagen(pdf_path, output_dir, nombre_base, dpi=200):
         imagenes[0].save(img_path, "PNG")
         return img_path
     except Exception as e:
-        print(f"    ✗ Error convirtiendo PDF a imagen: {e}")
+        logger.error(f"Error convirtiendo PDF a imagen: {e}")
         return None
 
 def convertir_html_a_pdf(directorio_reportes):
     if platform.system() == "Windows":
-        # Ajusta esta ruta a donde lo instalaste en tu PC
         path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
         config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
     else:
-        # En GitHub Actions (Linux) ya está en el PATH tras instalarlo
         config = pdfkit.configuration()
 
     options = {
@@ -44,18 +45,18 @@ def convertir_html_a_pdf(directorio_reportes):
         'quiet': ''
     }
 
-    print("Iniciando conversión a PDF...")
-    
+    logger.info("Iniciando conversión a PDF...")
+
     for archivo in os.listdir(directorio_reportes):
         if archivo.endswith(".html"):
             ruta_html = os.path.join(directorio_reportes, archivo)
             ruta_pdf = ruta_html.replace(".html", ".pdf")
-            
+
             try:
                 pdfkit.from_file(ruta_html, ruta_pdf, options=options, configuration=config)
-                print(f"  Convertido: {archivo} -> PDF")
+                logger.info(f"Convertido: {archivo} -> PDF")
             except Exception as e:
-                print(f"  Error en {archivo}: {e}")
+                logger.error(f"Error en {archivo}: {e}")
 
 if __name__ == "__main__":
     convertir_html_a_pdf("reports")

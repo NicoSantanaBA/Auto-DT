@@ -2,20 +2,21 @@ import smtplib
 import os
 from email.message import EmailMessage
 from datetime import datetime
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 def enviar_reporte():
-    # 1. Obtener credenciales desde GitHub Secrets
     remitente = os.getenv("EMAIL_USER")
     password = os.getenv("EMAIL_PASS")
-    destinatarios = ["joseph.cervantes@iplusd.cl"] 
+    destinatarios = ["joseph.cervantes@iplusd.cl"]
 
     if not remitente or not password:
-        print(" Error: Faltan EMAIL_USER o EMAIL_PASS en los Secretos de GitHub.")
+        logger.error("Faltan EMAIL_USER o EMAIL_PASS en las variables de entorno.")
         return
 
     fecha = datetime.now().strftime("%d/%m/%Y")
-    
-    # 2. Configurar el correo
+
     msg = EmailMessage()
     msg['Subject'] = f' Auditoría DT Completada - {fecha}'
     msg['From'] = remitente
@@ -27,9 +28,8 @@ def enviar_reporte():
         f"Bot de Auditoría Automática."
     )
 
-    # 3. Buscador de archivos ZIP (Raíz o carpeta reports)
     archivo_zip = None
-    print(" Buscando el archivo ZIP...")
+    logger.info("Buscando el archivo ZIP...")
     for ruta in [".", "reports"]:
         if os.path.exists(ruta):
             for f in os.listdir(ruta):
@@ -37,10 +37,11 @@ def enviar_reporte():
                 if nombre_f.endswith(".zip") and ("paquete" in nombre_f or "auditoria" in nombre_f):
                     archivo_zip = os.path.join(ruta, f)
                     break
-        if archivo_zip: break
+        if archivo_zip:
+            break
 
     if archivo_zip:
-        print(f" Archivo detectado: {archivo_zip}")
+        logger.info(f"Archivo detectado: {archivo_zip}")
         try:
             with open(archivo_zip, 'rb') as f:
                 msg.add_attachment(
@@ -50,21 +51,19 @@ def enviar_reporte():
                     filename=os.path.basename(archivo_zip)
                 )
 
-            # --- CONFIGURACIÓN ESPECÍFICA PARA GMAIL ---
-            print("Conectando a smtp.gmail.com...")
-            # Gmail usa SSL en el puerto 465 para conexiones seguras directas
+            logger.info("Conectando a smtp.gmail.com...")
             with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-                print(f"Intentando login con {remitente}...")
+                logger.info(f"Intentando login con {remitente}...")
                 server.login(remitente, password)
                 server.send_message(msg)
-            
-            print("¡EL CORREO SE ENVIÓ CORRECTAMENTE!")
-            
+
+            logger.info("Correo enviado correctamente.")
+
         except Exception as e:
-            print(f"Error al enviar el correo: {e}")
-            print("\n Tip: Asegúrate de que EMAIL_PASS sea la clave de 16 letras de Google, no tu clave normal.")
+            logger.error(f"Error al enviar el correo: {e}")
+            logger.error("Tip: Asegúrate de que EMAIL_PASS sea la clave de 16 letras de Google, no tu clave normal.")
     else:
-        print(" Error: No se encontró el archivo ZIP.")
+        logger.error("No se encontró el archivo ZIP.")
 
 if __name__ == "__main__":
     enviar_reporte()

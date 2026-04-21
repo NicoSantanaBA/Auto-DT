@@ -2,7 +2,10 @@ from selenium.webdriver.common.by import By
 from pages.base_page import BasePage
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from utils.logger import get_logger
 import time
+
+logger = get_logger(__name__)
 
 class FiscPage(BasePage):
 
@@ -32,7 +35,6 @@ class FiscPage(BasePage):
     BTN_CARGO = (By.CSS_SELECTOR, "a[id*='dviCargosBinding_ObjectsCreation_Menu_DXI0_T']")
     ALERTA_SIN_DATOS  = (By.XPATH, "//div[contains(@class,'dx-toast-message') and contains(text(),'No hay trabajadores')]")
     ALERTA_CONEXION   = (By.XPATH, "//div[contains(@class,'dx-toast-message') and contains(text(),'ConnectionString')]")
-    # XPATH unificado: captura cualquiera de los dos toasts con una sola espera
     _ALERTA_CUALQUIERA = (By.XPATH,
         "//div[contains(@class,'dx-toast-message') and "
         "(contains(text(),'No hay trabajadores') or contains(text(),'ConnectionString'))]"
@@ -42,33 +44,33 @@ class FiscPage(BasePage):
     # 1. Seleccionar reporte dinámico
     def seleccionar_reporte(self, nombre_reporte):
         locator = self.REPORTES[nombre_reporte]
-        print(f"        [fisc_page] Buscando locator para: {nombre_reporte}")
-        
+        logger.debug(f"[fisc_page] Buscando locator para: {nombre_reporte}")
+
         for intento in range(3):
             element = WebDriverWait(self.driver, 20).until(
                 EC.presence_of_element_located(locator)
             )
-            print(f"        [fisc_page] Elemento encontrado, haciendo click... (intento {intento + 1})")
+            logger.debug(f"[fisc_page] Elemento encontrado, haciendo click... (intento {intento + 1})")
             self.driver.execute_script("arguments[0].click();", element)
-            
+
             if self._hubo_cambio(timeout=5):
-                print(f"        [fisc_page] Click registrado, esperando loader...")
+                logger.debug("[fisc_page] Click registrado, esperando loader...")
                 self.wait_loader()
-                print(f"        [fisc_page] Loader terminado")
+                logger.debug("[fisc_page] Loader terminado")
                 return
-            
-            print(f"        [fisc_page] No hubo cambio, reintentando...")
+
+            logger.debug("[fisc_page] No hubo cambio, reintentando...")
             time.sleep(2)
-        
+
         raise Exception(f"No se pudo cargar el reporte {nombre_reporte} tras 3 intentos")
-    
+
     def click_reporte(self, nombre_reporte):
         locator = self.REPORTES[nombre_reporte]
         element = WebDriverWait(self.driver, 20).until(
-            EC.presence_of_element_located(locator)  # presence en vez de clickable
+            EC.presence_of_element_located(locator)
         )
         self.driver.execute_script("arguments[0].click();", element)
-    
+
     def _hubo_cambio(self, timeout=5):
         try:
             WebDriverWait(self.driver, timeout).until(
@@ -99,7 +101,7 @@ class FiscPage(BasePage):
                 EC.element_to_be_clickable(self.REPORTE_BTN)
             )
         except:
-            print("Botón Generar Reporte no apareció")
+            logger.warning("Botón Generar Reporte no apareció")
             return False, None
 
         time.sleep(2)
@@ -132,9 +134,6 @@ class FiscPage(BasePage):
         except:
             return None
 
-    
-
-
     # 3. Descargar PDF del reporte
     def descargar_pdf(self, download_path):
         boton = WebDriverWait(self.driver, 20).until(
@@ -158,37 +157,31 @@ class FiscPage(BasePage):
         archivo = self.wait_for_file(download_path)
         return archivo
 
-
     # 4. Flujo completo
     def flujo_reporte(self, nombre_reporte, download_path):
-
         self.seleccionar_reporte(nombre_reporte)
         self.generar_reporte()
         time.sleep(3)
         archivo = self.descargar_excel(download_path)
         return archivo
-    
 
     def seleccionar_cargo(self, cargo):
         self.wait_and_click(self.BTN_CARGO)
         self.wait_loader()
         time.sleep(2)
-        # Entrar al iframe del popup de cargos
         iframe = WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "iframe[id*='PopupWindow'][id*='CIF']"))
         )
         self.driver.switch_to.frame(iframe)
-        print("        [DEBUG] Dentro del iframe")
+        logger.debug("Dentro del iframe de cargos")
 
-        # Click directo en el cargo
         cargo_locator = (By.XPATH, f"//td[contains(text(),'{cargo}')]")
         cargo_el = WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located(cargo_locator)
         )
-        print(f"        [DEBUG] Cargo encontrado: {cargo_el.text}")
+        logger.debug(f"Cargo encontrado: {cargo_el.text}")
         self.driver.execute_script("arguments[0].click();", cargo_el)
 
-        # Volver al contexto principal
         self.driver.switch_to.default_content()
         self.wait_loader()
         time.sleep(2)
@@ -201,7 +194,7 @@ class FiscPage(BasePage):
             return True
         except:
             return False
-    
+
     def hay_sin_datos(self, timeout=5):
         """
         Fallback: comprueba si el toast 'No hay trabajadores' sigue en el DOM
@@ -262,6 +255,6 @@ class FiscPage(BasePage):
             WebDriverWait(self.driver, timeout).until(
                 EC.presence_of_element_located(self.REPORTE_BTN)
             )
-            return False  # Botón presente → página cargó correctamente
+            return False
         except:
-            return True   # No encontró el botón → pantalla en blanco
+            return True
