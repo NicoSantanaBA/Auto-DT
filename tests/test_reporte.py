@@ -10,7 +10,7 @@ from utils.helpers import limpiar_descargas
 from utils.auditoria import auditar_excel_final
 from utils.screenshots import guardar_captura
 from utils.report_html import generar_html
-from utils.pdf_converter import pdf_pagina1_a_imagen, pdf_primer_empleado_a_imagen
+from utils.pdf_converter import pdf_pagina1_a_imagen, pdf_primer_empleado_a_imagen, pdf_empleado_error_a_imagen
 from utils.logger import get_logger
 import shutil
 import time
@@ -141,7 +141,29 @@ def _intentar_reporte(driver, fisc, empresa, reporte, download_path, nombre_form
                     logger.warning(f"No se pudo generar imagen multi-página: {e_img}")
         else:
             logger.error(f"Auditoría FALLÓ: {errores}")
-            raise ReporteError(f"Auditoría fallida: {errores}", errores_lista=errores)
+            captura_error = None
+            if pdf_guardado and os.path.exists(pdf_guardado):
+                import re as _re
+                nombres = list(dict.fromkeys(
+                    m.group(1) for e in errores
+                    if (m := _re.search(r'\(([^)]+)\)', e))
+                ))
+                for nombre in nombres:
+                    try:
+                        captura_error = pdf_empleado_error_a_imagen(
+                            pdf_guardado, screenshots_dir, f"{reporte}_pdf_error", nombre
+                        )
+                        if captura_error:
+                            logger.info(f"Imagen de error generada para '{nombre}': {captura_error}")
+                            break
+                    except Exception as e_img:
+                        logger.warning(f"No se pudo generar imagen de error para '{nombre}': {e_img}")
+                if not captura_error:
+                    captura_error = pdf_pagina1_a_imagen(
+                        pdf_guardado, screenshots_dir, f"{reporte}_pdf_error"
+                    )
+                    logger.info("Imagen de error: fallback a página 1 del PDF")
+            raise ReporteError(f"Auditoría fallida: {errores}", errores_lista=errores, captura=captura_error)
 
     return "OK", [], captura
 
@@ -311,7 +333,7 @@ def test_reporte(driver, empresa):
                 logger.error(f"{nombre_formal}: {error_msg}")
                 estado = "FAIL"
                 errores_empresa.append(f"{nombre_formal}: {error_msg}")
-                captura = guardar_captura(driver, empresa["nombre"], f"{reporte}_error")
+                captura = getattr(e, 'captura', None) or guardar_captura(driver, empresa["nombre"], f"{reporte}_error")
                 break
 
         resultados_empresa["reportes"].append({
