@@ -140,18 +140,6 @@ def test_reporte(driver, empresa):
 
     limpiar_descargas(download_path)
 
-    login = LoginPage(driver)
-    login.load("https://asistenciadt.baplicada.cl/Login.aspx?FiscalizacionDT=Login")
-    login.login(USER[0]["usuario"], USER[0]["password"])
-
-    init = InitPage(driver)
-    init.seleccionar_empresa_por_rut(empresa["rut"])
-    init.fisc_init()
-    init.confirm()
-
-    fisc = FiscPage(driver)
-    time.sleep(3)
-
     errores_empresa = []
 
     resultados_empresa = {
@@ -159,6 +147,42 @@ def test_reporte(driver, empresa):
         "rut": empresa["rut"],
         "reportes": []
     }
+
+    login = LoginPage(driver)
+    init = InitPage(driver)
+    fisc = None
+    login_intentos_max = 3
+
+    for login_intento in range(login_intentos_max):
+        try:
+            login.load("https://asistenciadt.baplicada.cl/Login.aspx?FiscalizacionDT=Login")
+            login.login(USER[0]["usuario"], USER[0]["password"])
+            init.seleccionar_empresa_por_rut(empresa["rut"])
+            init.fisc_init()
+            init.confirm()
+            fisc = FiscPage(driver)
+            time.sleep(3)
+            break
+        except Exception as e:
+            logger.warning(f"Sesión inicial (intento {login_intento + 1}/{login_intentos_max}): {str(e)[:200]}")
+            if login_intento < login_intentos_max - 1:
+                logger.warning("Reintentando en 30 segundos...")
+                time.sleep(30)
+            else:
+                captura_login = guardar_captura(driver, empresa["nombre"], "login_error")
+                error_msg = f"Error de sesión inicial tras {login_intentos_max} intentos: {str(e)[:200]}"
+                logger.error(error_msg)
+                for reporte_key in empresa["reportes"]:
+                    nombre_formal_k = FiscPage.REPORTE_NOMBRES_FORMALES.get(reporte_key, reporte_key)
+                    resultados_empresa["reportes"].append({
+                        "nombre": nombre_formal_k,
+                        "estado": "FAIL",
+                        "errores": [error_msg],
+                        "captura": captura_login
+                    })
+                ruta_html = generar_html(resultados_empresa)
+                logger.info(f"Reporte HTML generado: {ruta_html}")
+                pytest.fail(f"{empresa['nombre']} | Fallo en sesión inicial tras {login_intentos_max} intentos")
 
     for reporte in empresa["reportes"]:
         nombre_formal = fisc.REPORTE_NOMBRES_FORMALES.get(reporte, reporte)
@@ -185,14 +209,21 @@ def test_reporte(driver, empresa):
                 if intento < sesion_incorrecta_max - 1:
                     captura = guardar_captura(driver, empresa["nombre"], f"{reporte}_error_sesion_intento{intento + 1}")
                     logger.warning("Recuperando sesión incorrecta: volviendo al selector de empresas...")
-                    driver.execute_script('window.stop();')
-                    driver.get("https://asistenciadt.baplicada.cl/Login.aspx?FiscalizacionDT=Login")
-                    time.sleep(3)
-                    init.seleccionar_empresa_por_rut(empresa["rut"])
-                    init.fisc_init()
-                    init.confirm()
-                    time.sleep(3)
-                    logger.info(f"Intento {intento + 2} para: {nombre_formal}")
+                    try:
+                        driver.execute_script('window.stop();')
+                        driver.get("https://asistenciadt.baplicada.cl/Login.aspx?FiscalizacionDT=Login")
+                        time.sleep(3)
+                        init.seleccionar_empresa_por_rut(empresa["rut"])
+                        init.fisc_init()
+                        init.confirm()
+                        time.sleep(3)
+                        logger.info(f"Intento {intento + 2} para: {nombre_formal}")
+                    except Exception as e_rec:
+                        logger.error(f"Recovery de sesión fallido: {e_rec}")
+                        estado = "FAIL"
+                        errores_lista = [error_msg]
+                        errores_empresa.append(f"{nombre_formal}: {error_msg}")
+                        break
                 else:
                     logger.error(f"Todos los intentos de sesión fallaron para {nombre_formal}")
                     estado = "FAIL"
@@ -207,14 +238,21 @@ def test_reporte(driver, empresa):
                 if intento == 0:
                     captura = guardar_captura(driver, empresa["nombre"], f"{reporte}_error_intento1")
                     logger.warning("Recuperando: volviendo al selector de empresas...")
-                    driver.execute_script('window.stop();')
-                    driver.get("https://asistenciadt.baplicada.cl/Login.aspx?FiscalizacionDT=Login")
-                    time.sleep(3)
-                    init.seleccionar_empresa_por_rut(empresa["rut"])
-                    init.fisc_init()
-                    init.confirm()
-                    time.sleep(3)
-                    logger.info(f"Segundo intento para: {nombre_formal}")
+                    try:
+                        driver.execute_script('window.stop();')
+                        driver.get("https://asistenciadt.baplicada.cl/Login.aspx?FiscalizacionDT=Login")
+                        time.sleep(3)
+                        init.seleccionar_empresa_por_rut(empresa["rut"])
+                        init.fisc_init()
+                        init.confirm()
+                        time.sleep(3)
+                        logger.info(f"Segundo intento para: {nombre_formal}")
+                    except Exception as e_rec:
+                        logger.error(f"Recovery fallido: {e_rec}")
+                        estado = "FAIL"
+                        errores_lista = [error_msg]
+                        errores_empresa.append(f"{nombre_formal}: {error_msg}")
+                        break
                 else:
                     logger.error(f"Segundo intento fallido para {nombre_formal}")
                     estado = "FAIL"
@@ -231,13 +269,16 @@ def test_reporte(driver, empresa):
                 errores_lista = [error_msg]
                 errores_empresa.append(f"{nombre_formal}: {error_msg}")
                 logger.warning("Restaurando sesión: volviendo al selector de empresas...")
-                driver.execute_script('window.stop();')
-                driver.get("https://asistenciadt.baplicada.cl/Login.aspx?FiscalizacionDT=Login")
-                time.sleep(3)
-                init.seleccionar_empresa_por_rut(empresa["rut"])
-                init.fisc_init()
-                init.confirm()
-                time.sleep(3)
+                try:
+                    driver.execute_script('window.stop();')
+                    driver.get("https://asistenciadt.baplicada.cl/Login.aspx?FiscalizacionDT=Login")
+                    time.sleep(3)
+                    init.seleccionar_empresa_por_rut(empresa["rut"])
+                    init.fisc_init()
+                    init.confirm()
+                    time.sleep(3)
+                except Exception as e_rec:
+                    logger.error(f"Restauración de sesión fallida: {e_rec}")
                 break
 
             except Exception as e:
