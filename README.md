@@ -1,6 +1,6 @@
 # ADT TEST — Automatización de Auditoría de Asistencia
 
-Suite de automatización con Selenium que genera, descarga y valida reportes de asistencia laboral desde el portal [asistenciadt.baplicada.cl](https://asistenciadt.baplicada.cl) para 14 empresas clientes.
+Suite de automatización con Selenium que genera, descarga y valida reportes de asistencia laboral desde el portal [asistenciadt.baplicada.cl](https://asistenciadt.baplicada.cl) para 13 empresas clientes.
 
 ## ¿Qué hace?
 
@@ -10,7 +10,9 @@ Por cada empresa configurada, el sistema:
 2. Selecciona la empresa por RUT
 3. Genera y descarga 6 tipos de reporte (PDF y/o Excel)
 4. Valida los datos del reporte de Jornada Diaria contra cálculos esperados
-5. Captura evidencia en screenshots
+5. Captura evidencia en imagen PNG del PDF:
+   - **Auditoría OK** → imagen con todas las páginas del primer empleado
+   - **Auditoría FAIL** → imagen de las páginas del empleado con error
 6. Genera un reporte HTML con el resumen de resultados
 7. Consolida todo en un ZIP y lo envía por email
 
@@ -75,7 +77,7 @@ ADT_TEST/
 │   ├── auditoria.py     # Valida el Excel de Jornada Diaria
 │   ├── enviar_correo.py # Envío del ZIP por email (Gmail SMTP)
 │   ├── helpers.py       # Limpieza de la carpeta de descargas
-│   ├── pdf_converter.py # Convierte primera página de PDF a PNG
+│   ├── pdf_converter.py # Convierte PDF a PNG: todas las páginas del primer empleado (OK) o del empleado con error (FAIL)
 │   ├── pdf_merger.py    # Fusiona reportes HTML en un PDF consolidado
 │   ├── report_html.py   # Genera el reporte HTML de resultados
 │   ├── screenshots.py   # Captura de pantalla con timestamp
