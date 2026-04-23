@@ -56,9 +56,6 @@ def _intentar_reporte(driver, fisc, empresa, reporte, download_path, nombre_form
 
     fisc.seleccionar_reporte(reporte)
 
-    if fisc.pantalla_en_blanco(timeout=3):
-        raise RecoverableError("Pantalla en blanco: el formulario del reporte no cargó")
-
     if empresa["filtro_cargo"] and reporte not in ["diario", "incidentes"]:
         fisc.seleccionar_cargo(empresa["Cargo"])
         logger.info(f"Cargo filtrado: {empresa['Cargo']}")
