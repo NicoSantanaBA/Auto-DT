@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [ "ci-cd-tests" ]
   workflow_dispatch:
-  schedule:
-    - cron: '15 12 * * *'
-      timezone: "America/Santiago"
 
 jobs:
   test:
