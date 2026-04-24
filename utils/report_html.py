@@ -15,17 +15,16 @@ _FORMAL_TO_KEY = {
 SUMMARY_JSON = os.path.join("reports", "summary_data.json")
 
 
-def _etiqueta_celda(estado, errores):
+def _etiqueta_celda(estado, errores, tipo_fallo=None):
     if estado == "OK":
         return "OK", "#28a745"
     if estado == "NO_DATA":
         return "SIN DATOS", "#ffc107"
-    texto = " ".join(errores).lower()
-    if "auditor" in texto:
+    if tipo_fallo == "auditoria":
         return "AUDITORIA", "#dc3545"
-    if "conexi" in texto or "connectionstring" in texto:
+    if tipo_fallo == "bdatos":
         return "BDATOS", "#dc3545"
-    if "sesi" in texto or "incorrecta" in texto:
+    if tipo_fallo == "servidor":
         return "SERVIDOR", "#dc3545"
     return "TIEMPO", "#dc3545"
 
@@ -46,7 +45,7 @@ def _registrar_en_resumen(resultados_empresa):
     }
     for r in resultados_empresa["reportes"]:
         key = _FORMAL_TO_KEY.get(r["nombre"], r["nombre"])
-        etiqueta, color = _etiqueta_celda(r["estado"], r.get("errores", []))
+        etiqueta, color = _etiqueta_celda(r["estado"], r.get("errores", []), r.get("tipo_fallo"))
         entry["reportes"][key] = {"etiqueta": etiqueta, "color": color}
 
     for i, d in enumerate(datos):
