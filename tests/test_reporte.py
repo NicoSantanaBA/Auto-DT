@@ -10,7 +10,7 @@ from utils.helpers import limpiar_descargas
 from utils.auditoria import auditar_excel_final
 from utils.screenshots import guardar_captura
 from utils.report_html import generar_html
-from utils.pdf_converter import pdf_pagina1_a_imagen, pdf_primer_empleado_a_imagen, pdf_empleado_error_a_imagen
+from utils.pdf_converter import pdf_pagina1_a_imagen, pdf_primer_empleado_a_imagen, pdf_empleado_error_a_imagen, pdf_todas_paginas_a_imagen
 from utils.logger import get_logger
 import shutil
 import time
@@ -112,6 +112,15 @@ def _intentar_reporte(driver, fisc, empresa, reporte, download_path, nombre_form
         logger.info(f"Imagen del PDF generada: {captura}")
     except Exception as e_pdf:
         logger.warning(f"No se pudo obtener imagen del PDF: {e_pdf}")
+
+    if reporte == "diario" and pdf_guardado and os.path.exists(pdf_guardado):
+        try:
+            captura_full = pdf_todas_paginas_a_imagen(pdf_guardado, screenshots_dir, f"{reporte}_pdf")
+            if captura_full:
+                captura = captura_full
+                logger.info(f"Imagen completa del reporte diario generada: {captura_full}")
+        except Exception as e_img:
+            logger.warning(f"No se pudo generar imagen completa del diario: {e_img}")
 
     if reporte == "jor_diaria":
         limpiar_descargas(download_path)

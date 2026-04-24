@@ -127,6 +127,18 @@ def pdf_empleado_error_a_imagen(pdf_path, output_dir, nombre_base, nombre_emplea
         logger.error(f"Error generando imagen de empleado con error: {e}")
         return None
 
+
+def pdf_todas_paginas_a_imagen(pdf_path, output_dir, nombre_base, dpi=200):
+    """Convierte todas las páginas del PDF a una imagen PNG combinada verticalmente."""
+    try:
+        with open(pdf_path, "rb") as f:
+            total = len(PdfReader(f).pages)
+        logger.info(f"PDF completo: {total} página(s)")
+        return _convertir_paginas_a_imagen(pdf_path, 1, total, output_dir, nombre_base, dpi)
+    except Exception as e:
+        logger.error(f"Error generando imagen completa del PDF: {e}")
+        return None
+
 def convertir_html_a_pdf(directorio_reportes):
     if platform.system() == "Windows":
         path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'

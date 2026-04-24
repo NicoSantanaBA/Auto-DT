@@ -2,7 +2,7 @@ name: Selenium Tests
 
 on:
   push:
-    branches: [ "ci-cd-tests", "feature-pdf-email", "master", "fix/session-recovery-robustness" ]
+    branches: [ "master", "feature/mejoras"]
   pull_request:
     branches: [ "ci-cd-tests" ]
   workflow_dispatch:
