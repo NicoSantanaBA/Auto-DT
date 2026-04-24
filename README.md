@@ -113,9 +113,31 @@ pytest tests/test_reporte.py -s -k "ENAP"
 pytest tests/test_reporte.py -s --html=reports/resultado.html --self-contained-html
 ```
 
+### Post-procesamiento manual (PDF consolidado y ZIP)
+
+Después de correr pytest, los HTMLs quedan en `reports/`. Para generar el PDF consolidado y el ZIP ejecuta desde la raíz del proyecto en la terminal de VS Code:
+
+**PowerShell:**
+```powershell
+$env:PYTHONPATH = $PWD
+python utils/pdf_merger.py    # genera reports/Reporte_Consolidado_Auditoria.pdf
+python utils/zipper.py        # genera Paquete_Final_YYYY-MM-DD.zip
+python utils/enviar_correo.py # opcional: enviar email
+```
+
+**CMD:**
+```cmd
+set PYTHONPATH=%CD%
+python utils/pdf_merger.py
+python utils/zipper.py
+python utils/enviar_correo.py
+```
+
+> `PYTHONPATH` es necesario para que los scripts encuentren los módulos internos del proyecto.
+
 ## CI/CD (GitHub Actions)
 
-El workflow `.github/workflows/test.yml` se activa automáticamente en push a las ramas `feature-pdf-email` y `ci-cd-tests`.
+El workflow `.github/workflows/test.yml` se activa en push a `master` y `feature/mejoras`, y manualmente desde GitHub (workflow_dispatch) para el cron externo.
 
 El pipeline:
 1. Instala Chrome, wkhtmltopdf y Poppler en Ubuntu
