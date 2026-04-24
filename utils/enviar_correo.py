@@ -46,7 +46,7 @@ HTML_TEMPLATE = """\
                   <td>
                     <p style="margin:0;color:#333;font-size:13px;line-height:1.8;">
                       <strong>&#128197; Fecha:</strong> {fecha}<br>
-                      <strong>&#128230; Contenido:</strong> PDF consolidado con evidencias por empresa<br>
+                      <strong>&#128230; Empresa:</strong> Biometría Aplicada<br>
                       <strong>&#9989; Estado:</strong> Proceso completado
                     </p>
                   </td>
@@ -84,9 +84,7 @@ def enviar_reporte():
     password = os.getenv("EMAIL_PASS")
     destinatarios = [
         "joseph.cervantes@iplusd.cl",
-        "nicolas.perez@baplicada.cl",
-        "nicolas.santana@baplicada.cl",
-        "cristian.zamora@baplicada.cl",
+        "josephmanolocervantesluna@gmail.com"
     ]
 
     if not remitente or not password:
