@@ -84,6 +84,24 @@ def _generar_tabla_resumen_email():
   <tbody>
     {rows}
   </tbody>
+</table>
+<p style="margin:16px 0 6px;color:#333333;font-size:12px;font-weight:bold;">Glosario de estados:</p>
+<table width="100%" cellpadding="0" cellspacing="0"
+       style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:10px;">
+  <tr><td style="padding:4px 8px;font-weight:bold;width:90px;border:1px solid #dee2e6;">OK</td>
+      <td style="padding:4px 8px;border:1px solid #dee2e6;">Reporte generado y auditado correctamente.</td></tr>
+  <tr style="background:#f8f9fa;"><td style="padding:4px 8px;font-weight:bold;border:1px solid #dee2e6;">SIN DATOS</td>
+      <td style="padding:4px 8px;border:1px solid #dee2e6;">No hay trabajadores registrados para este período.</td></tr>
+  <tr><td style="padding:4px 8px;font-weight:bold;border:1px solid #dee2e6;">AUDITORIA</td>
+      <td style="padding:4px 8px;border:1px solid #dee2e6;">Se detectaron inconsistencias en el reporte de Jornada Diaria.</td></tr>
+  <tr style="background:#f8f9fa;"><td style="padding:4px 8px;font-weight:bold;border:1px solid #dee2e6;">BDATOS</td>
+      <td style="padding:4px 8px;border:1px solid #dee2e6;">Error de conexión con la base de datos durante la generación del reporte.</td></tr>
+  <tr><td style="padding:4px 8px;font-weight:bold;border:1px solid #dee2e6;">SERVIDOR</td>
+      <td style="padding:4px 8px;border:1px solid #dee2e6;">El servidor no respondió o la sesión expiró.</td></tr>
+  <tr style="background:#f8f9fa;"><td style="padding:4px 8px;font-weight:bold;border:1px solid #dee2e6;">TIEMPO</td>
+      <td style="padding:4px 8px;border:1px solid #dee2e6;">El reporte no cargó dentro del tiempo máximo de espera.</td></tr>
+  <tr><td style="padding:4px 8px;font-weight:bold;border:1px solid #dee2e6;">R. VACÍO</td>
+      <td style="padding:4px 8px;border:1px solid #dee2e6;">El Reporte Diario se generó pero no contiene datos para el período consultado.</td></tr>
 </table>"""
 
 HTML_TEMPLATE = """\
