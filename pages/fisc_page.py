@@ -70,13 +70,6 @@ class FiscPage(BasePage):
 
         raise Exception(f"No se pudo cargar el reporte {nombre_reporte} tras 3 intentos")
 
-    def click_reporte(self, nombre_reporte):
-        locator = self.REPORTES[nombre_reporte]
-        element = WebDriverWait(self.driver, 20).until(
-            EC.presence_of_element_located(locator)
-        )
-        self.driver.execute_script("arguments[0].click();", element)
-
     def _hubo_cambio(self, timeout=5):
         try:
             WebDriverWait(self.driver, timeout).until(

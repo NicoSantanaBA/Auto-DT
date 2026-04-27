@@ -19,9 +19,6 @@ class InitPage(BasePage):
         self.wait_and_click(opcion)
         self.wait_loader()
 
-    def log_out(self):
-        self.wait_and_click(self.CANCEL_BTN)
-
     def fisc_init(self):
         self.wait_and_click(self.FISSC_BTN)
         self.wait_loader()
