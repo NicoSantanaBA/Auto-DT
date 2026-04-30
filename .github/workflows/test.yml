@@ -2,7 +2,7 @@ name: Selenium Tests
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "main" ]
   workflow_dispatch:
 
 jobs:
@@ -41,6 +41,7 @@ jobs:
         TZ: "America/Santiago"
         PORTAL_USER: ${{ secrets.PORTAL_USER }}
         PORTAL_PASS: ${{ secrets.PORTAL_PASS }}
+        RUT_EMPRESA_PRUEBA: "76257834-4"
       run: pytest tests/test_reporte.py -s
 
     - name: Generar PDF Consolidado

@@ -1,3 +1,5 @@
+import os
+
 EMPRESAS = [
     {
         "rut": "79777010-8",
@@ -117,3 +119,7 @@ EMPRESAS = [
 	"nom_informe": "CONSTRUCCIONES Y MONTAJES COM S.A."
     },
 ]
+
+_rut_prueba = os.environ.get("RUT_EMPRESA_PRUEBA")
+if _rut_prueba:
+    EMPRESAS = [e for e in EMPRESAS if e["rut"] == _rut_prueba]
