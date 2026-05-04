@@ -177,10 +177,8 @@ def enviar_reporte():
     remitente = os.getenv("EMAIL_USER")
     password = os.getenv("EMAIL_PASS")
     destinatarios = [
-        "joseph.cervantes@iplusd.cl",
-        "nicolas.perez@baplicada.cl",
         "nicolas.santana@baplicada.cl",
-        "cristian.zamora@baplicada.cl"
+        
     ]
 
     if not remitente or not password:
